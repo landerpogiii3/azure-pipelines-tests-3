@@ -24,29 +24,3 @@ jobs:
       ArtifactName: martini
       publishLocation: 'Container'
     displayName: 'Publish Artifact'
-
-- job: DeployPackage
-  displayName: Deploy the package
-  dependsOn: CreateZip
-
-  steps:
-  - download: current
-    artifact: martini
-  - script: |
-      echo "[INFO] Checking downloaded artifact..."
-      ls -l $(Pipeline.Workspace)/martini
-      echo "[INFO] Installing jq package..."
-      sudo apt update -y && sudo apt install -y jq
-      echo "[INFO] Installation successful..."
-      echo "[INFO] Retrieving access token..."
-      tokenResponse=$(curl --location 'https://my.torocloud.com/oauth2/token' \
-      --header 'Content-Type: application/x-www-form-urlencoded' \
-      --header 'Authorization: Basic OWQ5OGI1NWI4MDQzM2NjNjokMmEkMTIkTmpPTzZIQzZPSWoxam5qTmdGell6dXRrVUtlbWkySGN1OGJ5VzdJVVFMb1BPeHB1anBWSDY=' \
-      --data-urlencode 'client_id=9d98b55b80433cc6' \
-      --data-urlencode 'grant_type=client_credentials')
-      echo "[INFO] Access token retrieval successful..."
-      token=$(echo $tokenResponse | jq -r .access_token)
-      curl -X POST -H "Authorization:Bearer $token" "http://18.138.253.24:8080/esbapi/packages/upload?stateOnCreate=STARTED&replaceExisting=true" -H  "accept: application/json" -H  "Content-Type: multipart/form-data" -F "file=@$(Pipeline.Workspace)/martini/allens-empty-package.zip;type=application/zip"
-      echo "[INFO] Deploying Martini package to Martini Online..."      
-      echo "[INFO] Upload successful..."
-    displayName: 'Deploy'
